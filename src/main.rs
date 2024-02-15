@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
-    time::Duration,
+    time::{Duration, SystemTime},
 };
 use tokio::select;
 use tracing_subscriber::EnvFilter;
@@ -139,9 +139,9 @@ pub fn config() -> Swarm<MyBehaviour> {
         .unwrap()
         .with_behaviour(|key| {
             // To content-address message, we can take the hash of message and use it as an ID.
-            let message_id_fn = |message: &gossipsub::Message| {
+            let message_id_fn = |_: &gossipsub::Message| {
                 let mut s = DefaultHasher::new();
-                message.data.hash(&mut s);
+                SystemTime::now().hash(&mut s);
                 gossipsub::MessageId::from(s.finish().to_string())
             };
 
@@ -178,10 +178,6 @@ pub fn config() -> Swarm<MyBehaviour> {
         .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
 
-    // Create a Gossipsub topic
-    // let topic = gossipsub::IdentTopic::new("2");
-    // subscribes to our topic
-    // swarm.behaviour_mut().gossipsub.subscribe(&topic).unwrap();
     swarm
 }
 
